@@ -2,6 +2,8 @@
 
 
 
+
+
 ## Day 1
 
 
@@ -14,7 +16,7 @@
 print(4/2) # 나누기 연산자.
 print(4//2) # 몫 구하기
 print(5%3) # 나머지 구하기
-print(div(5,3)) # 몫과 나머지 구하기 튜플로 출력됨
+print(divmod(5,3)) # 몫과 나머지 구하기 튜플로 출력됨
 ```
 
 ## 기본 함수
@@ -2109,6 +2111,459 @@ ex) 나는 아침에 줌에 접속하여 (   ) 인증을 하였다.
     
 # 이런식으로 가지고 있는 텍스트 데이터들을 계산해서 확률이 제일 높은 것을 구하는 것이 통계적 방법이다.
 ```
+
+
+
+### n-gram 활용(문장 유사도 조사)
+
+카피킬러(copy killer) : 논문 표절 등 조사
+
+예를들어 의미는 다르지만 문자가 비슷한 두 문장이 있다.
+
+```python
+x = "머신러닝은 인공지능의 한 분류입니다"
+y = "런닝머신은 운동 기구중의 하나입니다"
+```
+
+
+
+두 문장을 2-gram으로 글자를 분리한다.
+
+```python
+# 2-gram(bi-gram) 단위로 글자 분리
+
+x => ["머신", "신러", ... "니다"] # 내가 작성한 숙제
+y => ["런닝", "닝머", ... "니다"] # 다른 사람이 작성한 숙제
+
+# 내가 작성한 숙제의 표절율?
+```
+
+
+
+여기서 유사도는 **중복되는 단어 개수 / x를 2글자 씩 분리한 리스트의 전체 길이**이다.
+
+```python
+x = "머신러닝은 인공지능의 한 분류입니다"
+y = "런닝머신은 운동 기구중의 하나입니다"
+
+x_s = x.replace(" ","") # 공백 제거
+for i in range(len(x_s)-1):
+    print(x_s[i],x_s[i+1], sep="")
+    
+y_s = y.repalce(" ", "")
+for i in range(len(x_s)-1):
+    print(y_s[i],y_s[i+1], se="")
+```
+
+> ```
+> 머신
+> 신러
+> 러닝
+> 닝은
+> 은인
+> 인공
+> 공지
+> 지능
+> 능의
+> 의한
+> 한분
+> 분류
+> 류입
+> 입니
+> 니다
+> 
+> 
+> 런닝
+> 닝머
+> 머신
+> 신은
+> 은운
+> 운동
+> 동기
+> 기구
+> 구중
+> 중의
+> 의하
+> 하나
+> 나입
+> 입니
+> 니다
+> ```
+
+이제 유사도를 구해보면
+
+```python
+cnt = 0 # 중복되는 개수 카운트
+
+for i in x_s_list:
+    for j in y_s_list:
+        if i == j:
+            cnt +=1
+print(cnt)
+print("유사도는 %s%%입니다."%(cnt/len(x_s_list)*100))
+```
+
+> ```
+> 3
+> 유사도는 20.0%입니다.
+> ```
+
+
+
+### *변수이름
+
+```python
+a = [1,2,10]
+print(*a)
+# a 안에 요소들이 전부 출력
+# print(a) 와의 차이가 있음!!
+print(a)
+```
+
+> 1 2 10
+>
+> [1,2,10]
+
+## Day 7
+
+### 함수란?
+
+반복적인 코드를 함수로 정의함으로서 다양한 장점이 있음(실수 줄임, 코드 간결성, 반복 사용)
+
+구조 :
+
+함수 실행(호출) : 함수명( )
+
+```python
+def 함수명():
+    수행할 코드 1
+    수행할 코드 2
+    ...
+    수행할 코드 n
+```
+
+
+
+### global
+
+전역변수 : 함수 밖에 있는 변수를 함수내에서도 사용하게 해줌
+
+```python
+x = 1
+
+def test():
+    global x # 함수 내부에서 함수 밖에 있는 변수 x를 사용하겠다!
+    x += 10
+
+test()
+print(x)
+```
+
+> ```
+> 11
+> ```
+
+
+
+## Day 8
+
+
+
+### 람다함수
+
+lambda  : 함수를 정의할 때 사용하는 예약어(def와 동일), 간단한 기능의 함수를 정의할 때 또는 def 를 사용할 수 없는 곳에 쓰임
+
+def : 복잡한 기능을 갖는 함수를 정의할 때
+
+```python
+def sumAll(a,b):
+    return a+b
+
+# 위에 sumAll 함수를 lambda로 표현
+
+sum_lambda = lambda a,b: a+b # 함수명 = lambda 매개변수 : 리턴 값
+sum_lambda(3,5)
+```
+
+> 8
+
+
+
+람다함수를 map함수의 인수로 전달하여 수행
+
+```python
+def add(a):
+    return a+1
+x = [1,2,3]
+
+# [2,3,4]가 출력
+
+x_add = []
+[x_add.append(add(i)) for i in x]
+x_add # [2,3,4]
+
+print(list(map(add,x))) # add 함수와 map을 사용할 때
+print(list(map(lambda x:x+1, x))) # lambda 함수 사용할 때
+```
+
+> ```
+> [2, 3, 4]
+> [2, 3, 4]
+> ```
+
+
+
+람다식에 if문을 쓰는 경우에는 콜론 기호를 사용하지 않는다.
+
+조건식 => 식(참) if 조건식 else  식 (거짓)
+
+```python
+list(map(lambda x: str(x) if x%2 ==0 else x, x))
+```
+
+> ```
+> [1, '2', 3, '4', 5]
+> ```
+
+
+
+조건식이 여러개일 경우
+
+조건식 => 식1 if 조건식1 else 식2 if 조건식2 else 식3
+
+```python
+list(map(lambda x: str(x) if x==1 else float(x) if x==2 else x,x))
+```
+
+> ```
+> ['1', 2.0, 3, 4, 5]
+> ```
+
+
+
+### divmod 
+
+몫, 나머지를 구하는 함수
+
+구조 : divmod(수, 나누는 수)
+
+=> 결과값은 튜플로 리턴
+
+```python
+divmod(5,2)
+```
+
+> (2,1)
+
+
+
+### enumerate
+
+열거형 함수, for 문과 많이 쓰임
+
+리스트(튜플, 문자열 같이 순서가 있는 자료구조)의 자료를 입력받아서 (index, 자료) 형식으로 리턴해줌
+
+```python
+a = ["a","b","c"]
+
+for i in enumerate(a):
+    print(i)
+    
+for i, data in enumerate(a):
+    print(i, data)
+```
+
+> ```
+> (0, 'a')
+> (1, 'b')
+> (2, 'c')
+> 0 a
+> 1 b
+> 2 c
+> ```
+
+
+
+### eval
+
+연산이 가능한 문자열을 전달받아 연산을 수행하고 결과를 리턴해준다.
+
+```python
+a = "1+2"
+print(eval(a))
+```
+
+> 3
+
+
+
+### filter
+
+조건에 만족하는 자료들만 추출
+
+filter(함수, 리스트(튜플, 문자열)) -> 함수에 정의한 조건을 만족하는 데이터들만 리턴해 줌
+
+```python
+def myFunc(data):
+    return data > 3 and data < 7
+
+data = [8,1,5,2,6]
+print(list(filter(myFunc, data)))
+
+print(list(filter(lambda x:3<x<7,data)))
+```
+
+> ```
+> [5, 6]
+> [5, 6]
+> ```
+
+myFunc 에서 3 < data < 7 에 해당하는 값만 True로 통과하고 filter 함수에서 True된 값을 리턴시켜줌
+
+
+
+lambda 함수에 조건문을 넣었을 때 map과 다르게 filter는 if 문에 해당하는 조건문만 통과시켜줌
+
+(당연한 얘기겠지만 if는 True고 else는 False니까!)
+
+예를들면 map은 전부 리턴되서 나옴
+
+```python
+list(map(lambda x: x if 3<x<7 else 0, data))
+```
+
+> ```
+> [0, 0, 5, 0, 6, 0]
+> ```
+
+
+
+filter는 else를 고려하지 않아도 된다.
+
+```python
+print(list(filter(lambda x: x if 3<x<7 else 0, data)))
+print(list(filter(lambda x: 3<x<7, data)))
+```
+
+> ```
+> [5, 6]
+> [5, 6]
+> ```
+
+
+
+### pow
+
+제곱을 해주는 함수
+
+```python
+print(pow(3,2)) # 3의 2제곱
+```
+
+> 9
+
+
+
+### round
+
+반올림 해주는 함수
+
+```python
+print(round(3.1)) # default 값은 0
+print(round(3.141592,1))
+print(round(3.141592,3))
+```
+
+> ```
+> 3
+> 3.1
+> 3.142
+> ```
+
+
+
+### zip
+
+같은 위치의 자료들을 묶는 함수
+
+```python
+print(list(zip((1,2),{3,4})))
+print(list(zip("hi","hello"))) # 자리수가 같은 곳 까지만 묶어줌
+print(list(zip([1,2],[3,4],[5,6,7])))
+```
+
+> ```
+> [(1, 3), (2, 4)]
+> [('h', 'h'), ('i', 'e')]
+> [(1, 3, 5), (2, 4, 6)]
+> ```
+
+
+
+
+
+## Day 9
+
+
+
+### 정규표현식
+
+정규표현식은 문자열의 패턴에 대한 표현식을 작성한다.
+
+- re.match("패턴", "문자열") : 문자열에 패턴이 있는지 확인
+
+  ```python
+  re.match("hi", "hi hello world") # "hi hello world"에 "hi"가 있는지 판단
+  ```
+
+  match 함수는 문자열의 최 좌측부터 시작하여 패턴이 있는지 확인.
+
+  처음부터 패턴이 문자열에 없다면 종료.
+
+  ```python
+  re.match("hello", "hi hello world")
+  # e부터 매치가 안되기 때문에 종료
+  ```
+
+  
+
+  패턴이 문자열에 있다면 매치된 문자열이  Match 객체로 출력
+
+  ```python
+  re.match("hello", "hello world")
+  ```
+
+  > ```
+  > <re.Match object; span=(0, 5), match='hello'>
+  > ```
+
+
+
+### 메타문자
+
+정규표현식에서 식을 정의하는데 사용되는 특별한 의미의 문자(기호)
+
+종류 : ( ),  [ ], { },   \, | ...
+
+1.  [ ] : 모든 문자가 대괄호 안에 올 수 있음
+
+   ex) [abcde] : a,b,c,d,e 중에서 한 개의 문자와 매치
+
+   ```python
+   print(re.match("[ ]"," a"))
+   print(re.match("[abcde]+","abcd")) # +는 한 문자 이상과 매치되는지 검사
+   print(re.match("[abcde]+","xabcd"))
+   print(re.match("[abcde]+","abfcd"))
+   ```
+
+   > ```
+   > <re.Match object; span=(0, 1), match=' '>
+   > <re.Match object; span=(0, 4), match='abcd'>
+   > None
+   > <re.Match object; span=(0, 2), match='ab'>
+   > ```
+
+
 
 
 
