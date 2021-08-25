@@ -2545,7 +2545,7 @@ print(list(zip([1,2],[3,4],[5,6,7])))
 
 종류 : ( ),  [ ], { },   \, | ...
 
-1.  [ ] : 모든 문자가 대괄호 안에 올 수 있음
+1. [ ] : 모든 문자가 대괄호 안에 올 수 있음
 
    ex) [abcde] : a,b,c,d,e 중에서 한 개의 문자와 매치
 
@@ -2563,7 +2563,42 @@ print(list(zip([1,2],[3,4],[5,6,7])))
    > <re.Match object; span=(0, 2), match='ab'>
    > ```
 
+2.  "-" : - 하이픈 기호로 범위를 지정해 줄 수 있다.
 
+    ex) [a-z] : a ~ z 까지 범위 지정
+
+    ```python
+    print(re.match("[a-z]+","all")) # '-' 하이픈 기호로 범위를 지정해줄 수 있음
+    print(re.match("[10832]+","120348"))
+    print(re.match("[0-9]+","120348"))
+    print(re.match("[A-Z]+","HELLO WORLD")) # 공백문자도 넣어주면 모두 표기됨
+    print(re.match("[A-Za-z ]+","Hello World"))
+    
+    print(re.match("[가-힣ㄱ-ㅎ]+","ㅎㅎㅎㅋㅋ가다나가다라다")) # 한글 전체 문자 나타내기 # ㄱ-힣 으로 표기해도 가능
+    ```
+
+> ```
+> <re.Match object; span=(0, 3), match='all'>
+> <re.Match object; span=(0, 4), match='1203'>
+> <re.Match object; span=(0, 6), match='120348'>
+> <re.Match object; span=(0, 5), match='HELLO'>
+> <re.Match object; span=(0, 11), match='Hello World'>
+> 
+> <re.Match object; span=(0, 12), match='ㅎㅎㅎㅋㅋ가다나가다라다'>
+> ```
+
+범위값 지정하는 방법으로는 다음과 같다.
+
+cf. ^는 제외한 모든 문자를 의미한다.
+
+```
+[0-9] ==\d
+[^0-9] == \D 숫자를 제외한 모든 문자
+[0-9A-Za-z] == \w
+[^0-9A-Za-z] == \W
+[ \t\n\r] == \s
+[^ \t\n\r] ==\S
+```
 
 
 
