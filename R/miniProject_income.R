@@ -139,7 +139,10 @@ ggplot(data=incomeFill,
 
 #  => 한창 일을 할 때인 20대 ~ 50대 중 중위소득을 미충족하는 비율이 가장 큰 나이대는 20대이다.
 
+# 월급과 나이대 plot 시각화
 
+attach(welfare)
+plot(income~ageCut)
 
 
 # ============================================================================= #
@@ -221,6 +224,16 @@ ggplot(data=income_age_religion,
 # 종교가 없는 사람들의 월급이 조금 더 높다.
 
 
+# 종교와 이혼율 관계 분석
+
+table(welfare$marriage)
+
+qplot(welfare[welfare$marriage=="이혼",]$religion)
+
+# => 이혼한 사람들의 종교 유무는 없는 사람이 좀 더 많다.
+
+
+
 
 # ============================================================================= #
 
@@ -240,12 +253,237 @@ qplot(welfare$code_region)
 # 10살 기준을 나눈 연령대는 지역별 연령대를 볼 때 너무 많이 나뉘어서
 # 연령대를 3개의 그룹으로 나눠서 보자
 
-welfare %>% 
-  mutate(welfare$age)
+class(welfare$age)
+
+welfare$ageCut2 <- ifelse(welfare$age<20,"미성년자",
+                          ifelse(welfare$age<40, "청년",
+                                 ifelse(welfare$age<60, "장년", "노년")))
+
+table(welfare$ageCut2)
+
+
+# 지역별 연령대 인구 수 시각화
+
+ageCut_by_region <- welfare %>% 
+  group_by(code_region, ageCut2) %>% 
+  summarise(n=n()) %>%  
+  mutate(tot_group = sum(n)) %>% 
+  mutate(pct = round(n/tot_group*100,2))
+
+ggplot(data = ageCut_by_region,
+       aes(x=code_region, y=n, fill=ageCut2))+geom_col()
+
+
+# 지역별 연령대 비율 시각화
+
+ageCut_by_region <- welfare %>% 
+                      group_by(code_region, ageCut2) %>% 
+                      summarise(n=n()) %>%  
+                      mutate(tot_group = sum(n)) %>% 
+                      mutate(pct = round(n/tot_group*100,2))
+
+
+ageCut_by_region
+
+
+ggplot(data = ageCut_by_region,
+       aes(x=code_region, y=pct, fill=ageCut2))+
+  geom_col()+
+  coord_flip()
+
+
+# => 비수도권일수록 노년의 비율이 커지는걸 볼 수 있다.
+
+
+# 지역별 월급
+
+income_by_region <- welfare %>% 
+                      filter(!is.na(income)) %>% 
+                      group_by(code_region) %>% 
+                      summarise(mean(income))
+
+income_by_region
+
+ggplot(data=income_by_region,
+       aes(x=code_region, y=`mean(income)`))+geom_col()
+
+# => 서울의 월급이 가장 높을줄 알았는데 의외로 충남의 월급이 가장 높았다..
+
+
+
+# ============================================================================= #
+
+# 직종코드 기반 급여를 많이 받거나 적게 받는 직종 30개씩 검색
+
+
+sum(is.na(welfare$code_job)) # 결측치 9135개
+
+table(welfare$code_job)
+
+income_by_job <- welfare %>% 
+                    filter(!is.na(income)) %>% 
+                    group_by(code_job) %>% 
+                    summarise(meanIncome = mean(income)) %>% 
+                    arrange(desc(meanIncome)) %>% 
+                    head(30)
+job_top30 <- as.data.frame(income_by_job)
+job_top30
+
+income_by_job2 <- welfare %>% 
+  filter(!is.na(income)) %>% 
+  group_by(code_job) %>% 
+  summarise(meanIncome = mean(income)) %>% 
+  arrange((meanIncome)) %>% 
+  head(30)
+
+job_bot30 <- as.data.frame(income_by_job2)
+job_bot30
+
+
+jobName
+jobTop30 <- as.list(job_top30[1])
+jobTop30
+class(jobTop30)
+
+jobBot30 <- as.list(job_bot30[1])
+jobBot30
+
+
+# 월급이 많은 상위 30개의 직업 이름
+
+for (i in jobTop30$code_job){
+  print(jobName[jobName["code_job"]==i,]$job)
+  # print(i)
+  
+}
+
+
+for (i in jobBot30$code_job){
+  print(jobName[jobName["code_job"]==i,]$job)
+  # print(i)
+  
+}
+
+
+
+# ============================================================================= #
+
+
+# 직종코드는 있지만, 급여가 확인되지 않은 3000명 정도 NA가 존재
+# 급여가 NA인 사람의 직종코드를 참조하여, 동일한 직종코드의 해당되는
+# 다른 사람들의 데이터를 찾아서 급여를 유추하여 결측치 대체
+
+welfare <- welfare %>% 
+            mutate(index = rownames(welfare))
+
+# 직종코드 o / 급여 NA인 직종코드
+
+list_a <- welfare[is.na(welfare$income)&!is.na(welfare$code_job),][c("code_job")]
+list_a
+
+list_a[,"income"] <- c(NA)
+list_a
+
+# 직종코드 중복값 제외
+unique_a <- unique(list_a$code_job)
+unique_a
+length(unique_a) # 107개
+
+# 모든 직업들의 평균 월급을 저장
+
+income_by_alljob <- welfare %>% 
+  filter(!is.na(income)) %>% 
+  group_by(code_job) %>% 
+  summarise(meanIncome = mean(income))
+
+income_by_alljob
+
+# 직업코드에 맞는 평균 월급을 저장
+
+for (i in unique_a){
+  if (i %in% income_by_alljob$code_job){
+    list_a[list_a$code_job==i,]$income=income_by_alljob[income_by_alljob$code_job==i,]$meanIncome
+    print(i)
+  }
+}
+
+list_a[is.na(list_a$income),]
+# -> 직업코드가 630, 812, 819인 직업들의 income이 없음
 
 welfare %>% 
-  group_by(code_region, ageCut) %>% 
-  count(ageCut)
+  filter(!is.na(income)&code_job==819) %>% 
+  summarise(mean(income))
+
+# 630, 812, 819번의 직업코드들은 income데이터가 아예없어서 대체 불가능!!!
+
+
+# welfare 데이터프레임에 630, 812, 819 코드를 제외한 값을 넣어주자
+
+for (i in c(1:nrow(list_a))){
+  welfare[row.names(list_a[i,]),]$income <- list_a[i,2]
+}
+
+
+# ========================연습용==============================================#
+
+
+
+
+
+for (i in unique_a){
+  if (i %in% income_by_alljob$code_job){
+    list_a[df_a$code_job==i,]$income=income_by_alljob[income_by_alljob$code_job==i,]$meanIncome
+    print(i)
+  }
+}
+
+
+list_a[is.na(list_a$income),]
+# -> 직업코드가 630, 812, 819인 직업들의 income이 없음
+
+df_a[is.na(df_a$income),]
+# -> 직업코드가 630, 812, 819인 직업들의 income이 없음
+
+welfare %>% 
+  filter(!is.na(income)&code_job==819) %>% 
+  summarise(mean(income))
+  
+# 630, 812, 819번의 직업코드들은 income데이터가 아예없어서 대체 불가능!!!
+
+
+# welfare 데이터프레임에 630, 812, 819 코드를 제외한 값을 넣어주자
+
+class(welfare)
+
+
+ifelse(!is.na(welfare[welfare$code_job==441,]$income),
+       welfare[welfare$code_job==441,]$income,
+       mean(welfare[welfare$code_job==441,]$income, na.rm=T))
+
+
+
+# for (i in unique_a){
+#   if (i %in% income_by_alljob$code_job){
+#     # welfare[welfare$code_job==i,]$income=income_by_alljob[income_by_alljob$code_job==i,]$meanIncome
+#     # print(i)
+#     
+#     welfare[welfare$code_job==i,]$income <- ifelse(!is.na(welfare[welfare$code_job==i,]$income),
+#                          welfare[welfare$code_job==i,]$income,
+#                          income_by_alljob[income_by_alljob$code_job==i,]$meanIncome)
+#   }
+# }
+
+welfare$income
+
+welfare[welfare$code_job==261,]$income=income_by_alljob[income_by_alljob$code_job==261,]$meanIncome
+
+filter(welfare, code_job==261)$income
+
+
+income_by_alljob[income_by_alljob$code_job==261,]$meanIncome
+
+
+welfare[welfare$code_job==261,]$income <- 341
 
 
 
@@ -254,21 +492,54 @@ welfare %>%
 
 
 
+for (i in unique_a){
+  # print(i)
+  a <- income_by_alljob[income_by_alljob$code_job==i,]$meanIncome # 조건에 맞는 데이터를 a로 저장
+  a_income <- c(a_income,a)
+  print(a)
+}
 
 
 
+a_income <- c() # list_a의 월급을 저장할 벡터 생성
+for (i in unique_a){
+  # print(i)
+  a <- income_by_alljob[income_by_alljob$code_job==i,]$meanIncome # 조건에 맞는 데이터를 a로 저장
+  a_income <- c(a_income,a)
+  print(a)
+}
+
+a_income
+length(a_income) # 104개
 
 
 
+# 직업코드의 개수는 107개였는데 저장된 월급벡터에는 104개의 데이터가 들어가있음
+# => 3개의 데이터에서 NA값이 있는걸 확인할 수 있음.
+
+ans <- c()
+ans <- welfare[!is.na(welfare$code_job)&is.na(welfare$income),][c("code_job","index")]
+ans
+
+ans <- ans %>% 
+  mutate(income=NA)
+
+ans
+class(ans)
+
+welfare[welfare$code_job==441,]$income
 
 
+ans[ans$code_job==441,]$income
+
+welfare %>% 
+  filter(code_job==441) %>% 
+  filter(is.na(income))
 
 
+ifelse(!is.na(welfare[welfare$code_job==441,]$income),
+                        welfare[welfare$code_job==441,]$income,
+                        mean(welfare[welfare$code_job==441,]$income, na.rm=T))
 
-
-
-
-
-
-
-
+!is.na(welfare[welfare$code_job==441]$income)
+welfare[welfare$code_job==441]$income
